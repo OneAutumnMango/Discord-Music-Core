@@ -1,16 +1,22 @@
 import yt_dlp
 import discord
+import asyncio
 
 class MusicBot:
-    def __init__(self):
+    def __init__(self, voice_client: discord.VoiceClient):
+        self.voice_client = voice_client  # Must be set by the Discord bot when joining voice
         self.ydl_opts = {
             'format': 'bestaudio/best',
             'quiet': True,
             'default_search': 'auto',
             'noplaylist': True,
         }
+        self.queue = asyncio.Queue()
+        self.play_next_song = asyncio.Event()
+        self.current = None
+        self.player_task = None
 
-    async def play(self, url: str):
+    async def _create_source(self, url: str):
         with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             audio_url = info['url']
@@ -19,15 +25,39 @@ class MusicBot:
         source = await discord.FFmpegOpusAudio.from_probe(audio_url, method='fallback')
         return source, title
 
+    async def _player_loop(self):
+        while True:
+            self.play_next_song.clear()
+            url = await self.queue.get()
+            try:
+                source, title = await self._create_source(url)
+            except Exception as e:
+                print(f"Failed to get source for {url}: {e}")
+                self.queue.task_done()
+                continue
 
-if __name__ == "__main__":
-    import asyncio
+            def after_playing(error):
+                if error:
+                    print(f"Player error: {error}")
+                # Signal the player loop to play the next song
+                loop = asyncio.get_event_loop()
+                loop.call_soon_threadsafe(self.play_next_song.set)
 
-    async def test():
-        bot = MusicBot()
-        url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        source, title = await bot.play(url)
-        print(f"Got audio source for: {title}")
-        print(f"Type: {type(source)}")
 
-    asyncio.run(test())
+            self.voice_client.play(source, after=after_playing)
+            self.current = title
+            print(f"Now playing: {title}")
+
+            # Wait until the current song is done
+            await self.play_next_song.wait()
+            self.queue.task_done()
+            self.current = None
+
+    async def play(self, url: str):
+        await self.queue.put(url)
+
+        # Start the player loop if it's not running
+        if self.player_task is None or self.player_task.done():
+            self.player_task = asyncio.create_task(self._player_loop())
+
+    
