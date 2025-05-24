@@ -1,3 +1,3 @@
-from musicbot import MusicBot
+from .musicbot import MusicBot
 
 __all__ = ["MusicBot"]
