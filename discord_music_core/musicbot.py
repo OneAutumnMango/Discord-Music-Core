@@ -68,6 +68,23 @@ class MusicBot:
         if self.voice_client.is_playing():
             self.voice_client.stop()  # This triggers after_playing callback, so next song plays
 
+    def stop(self):
+        if self.voice_client.is_playing():
+            self.voice_client.stop()
+        while not self.queue.empty():
+            self.queue.get_nowait()
+            self.queue.task_done()
+        self.current = None
+
+    def pause(self):
+        if self.voice_client.is_playing():
+            self.voice_client.pause()
+
+    def resume(self):
+        if self.voice_client.is_paused():
+            self.voice_client.resume()
+
+
     def get_queue(self):
         """Return a list of URLs currently in queue."""
         return list(self.queue._queue)
