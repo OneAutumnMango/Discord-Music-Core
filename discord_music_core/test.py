@@ -35,7 +35,8 @@ class DummyVoiceClient:
 
 async def main():
     dummy_vc = DummyVoiceClient()
-    bot = MusicBot(dummy_vc)
+    loop = asyncio.get_running_loop()
+    bot = MusicBot(dummy_vc, loop)
 
     # Add two songs to the queue
     await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")

@@ -3,8 +3,9 @@ import discord
 import asyncio
 
 class MusicBot:
-    def __init__(self, voice_client: discord.VoiceClient):
+    def __init__(self, voice_client: discord.VoiceClient, loop: asyncio.AbstractEventLoop):
         self.voice_client = voice_client  # Must be set by the Discord bot when joining voice
+        self.loop = loop
         self.ydl_opts = {
             'format': 'bestaudio/best',
             'quiet': True,
@@ -40,8 +41,7 @@ class MusicBot:
             def after_playing(error):
                 if error:
                     print(f"Player error: {error}")
-                loop = asyncio.get_event_loop()
-                loop.call_soon_threadsafe(self.play_next_song.set)
+                self.loop.call_soon_threadsafe(self.play_next_song.set)
 
             self.voice_client.play(source, after=after_playing)
             self.current = title
