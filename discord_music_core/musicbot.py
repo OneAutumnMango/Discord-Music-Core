@@ -60,4 +60,15 @@ class MusicBot:
         if self.player_task is None or self.player_task.done():
             self.player_task = asyncio.create_task(self._player_loop())
 
-    
+    def skip(self):
+        """Skip current song and start next in queue."""
+        if self.voice_client.is_playing():
+            self.voice_client.stop()  # This triggers after_playing callback, so next song plays
+
+    def get_queue(self):
+        """Return a list of URLs currently in queue."""
+        return list(self.queue._queue)
+
+    def get_current(self):
+        """Return the title of the currently playing song or None."""
+        return self.current
