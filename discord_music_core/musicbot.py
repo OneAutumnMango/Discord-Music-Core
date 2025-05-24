@@ -28,9 +28,10 @@ class MusicBot:
     async def _player_loop(self):
         while True:
             self.play_next_song.clear()
-            url = await self.queue.get()
+            url, title = await self.queue.get()
+
             try:
-                source, title = await self._create_source(url)
+                source, _ = await self._create_source(url)
             except Exception as e:
                 print(f"Failed to get source for {url}: {e}")
                 self.queue.task_done()
@@ -39,24 +40,26 @@ class MusicBot:
             def after_playing(error):
                 if error:
                     print(f"Player error: {error}")
-                # Signal the player loop to play the next song
                 loop = asyncio.get_event_loop()
                 loop.call_soon_threadsafe(self.play_next_song.set)
-
 
             self.voice_client.play(source, after=after_playing)
             self.current = title
             print(f"Now playing: {title}")
 
-            # Wait until the current song is done
             await self.play_next_song.wait()
             self.queue.task_done()
             self.current = None
 
     async def play(self, url: str):
-        await self.queue.put(url)
+        try:
+            _, title = await self._create_source(url)
+        except Exception as e:
+            print(f"Failed to extract info for {url}: {e}")
+            return
 
-        # Start the player loop if it's not running
+        await self.queue.put((url, title))
+
         if self.player_task is None or self.player_task.done():
             self.player_task = asyncio.create_task(self._player_loop())
 
