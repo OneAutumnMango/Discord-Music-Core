@@ -1,10 +1,12 @@
+from asyncio import tasks
 import yt_dlp
 import discord
 import asyncio
+from datetime import timedelta, datetime
 
 class MusicBot:
-    def __init__(self, voice_client: discord.VoiceClient, loop: asyncio.AbstractEventLoop):
-        self.voice_client = voice_client  # Must be set by the Discord bot when joining voice
+    def __init__(self, voice_client: discord.VoiceClient, loop: asyncio.AbstractEventLoop, afk_timeout=5):
+        self.voice_client = voice_client
         self.loop = loop
         self.ydl_opts = {
             'format': 'bestaudio/best',
@@ -16,6 +18,25 @@ class MusicBot:
         self.play_next_song = asyncio.Event()
         self.current = None
         self.player_task = None
+
+        self.afk_timeout = afk_timeout
+        self.last_played = None
+        self.voice_check_loop.start()
+
+    def cog_unload(self):
+        self.voice_check_loop.cancel()
+
+    @tasks.loop(seconds=30)
+    async def voice_check_loop(self):
+        now = datetime.now(datetime.timezone.utc)
+        for vc in self.bot.voice_clients:
+            if not vc.is_playing() and not vc.is_paused():
+                if self.last_played and (now - self.last_played) > timedelta(minutes=self.afk_timeout):
+                    await vc.disconnect()
+                    print(f"Disconnected due to inactivity: {vc.channel}")
+            else:
+                self.last_played = now
+
 
     async def _create_source(self, url: str):
         with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
