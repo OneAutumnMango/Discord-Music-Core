@@ -1,4 +1,4 @@
-from asyncio import tasks
+from discord.ext import tasks
 import yt_dlp
 import discord
 import asyncio
