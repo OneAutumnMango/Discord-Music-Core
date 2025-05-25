@@ -39,10 +39,11 @@ async def main():
     bot = MusicBot(dummy_vc, loop)
 
     # Add two songs to the queue
-    await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-    await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-    await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-    await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    await bot.play("the sound of music")
+    # await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    # await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    # await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    # await bot.play("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
     # Start player loop task
     player_task = asyncio.create_task(bot._player_loop())

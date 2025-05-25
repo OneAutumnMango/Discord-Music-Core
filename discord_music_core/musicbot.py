@@ -51,14 +51,38 @@ class MusicBot:
             self.queue.task_done()
             self.current = None
 
-    async def play(self, url: str):
+    async def _get_url_from_query(self, query: str) -> str:
+        """Return a video URL from a search query using yt_dlp."""
+        opts = self.ydl_opts.copy()
+        opts["quiet"] = True
+        opts["noplaylist"] = True
+        opts["default_search"] = "ytsearch1"  # Use YouTube search
+
+        return await self.loop.run_in_executor(None, self._blocking_search, query, opts)
+    
+    def _blocking_search(self, query, opts):
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(query, download=False)
+            if "entries" in info:
+                return info["entries"][0]["webpage_url"]
+            return info["webpage_url"]
+
+
+    async def play(self, query: str):
+        if not query.startswith("http"):
+            try:
+                query = await self._get_url_from_query(query)
+            except Exception as e:
+                print(f"Search failed for query '{query}': {e}")
+                return
+
         try:
-            _, title = await self._create_source(url)
+            _, title = await self._create_source(query)
         except Exception as e:
-            print(f"Failed to extract info for {url}: {e}")
+            print(f"Failed to extract info for {query}: {e}")
             return
 
-        await self.queue.put((url, title))
+        await self.queue.put((query, title))
 
         if self.player_task is None or self.player_task.done():
             self.player_task = asyncio.create_task(self._player_loop())
