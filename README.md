@@ -51,7 +51,8 @@ Create a music bot instance tied to a Discord voice client with configurable afk
 
 ### `async play(query: str)`
 
-Add a song to the queue, accepts URLs or search queries.
+Add a song to the queue, accepts URLs or search queries. 
+Returns song title.
 
 ### `skip()`
 
