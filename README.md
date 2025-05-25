@@ -45,9 +45,9 @@ A usage example can be found in my Discord bot music cog linked [here](https://g
 
 ## API Overview
 
-### `MusicBot(voice_client: discord.VoiceClient, loop: asyncio.AbstractEventLoop)`
+### `MusicBot(voice_client: discord.VoiceClient, loop: asyncio.AbstractEventLoop, afk_timeout: int)`
 
-Create a music bot instance tied to a Discord voice client.
+Create a music bot instance tied to a Discord voice client with configurable afk_timeout
 
 ### `async play(query: str)`
 
