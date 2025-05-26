@@ -44,7 +44,12 @@ class MusicBot:
             audio_url = info['url']
             title = info.get('title', 'Unknown Title')
 
-        source = await discord.FFmpegOpusAudio.from_probe(audio_url, method='fallback')
+        ffmpeg_opts = {
+            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+            'options': '-vn'
+        }
+
+        source = await discord.FFmpegOpusAudio.from_probe(audio_url, method='fallback', **ffmpeg_opts)
         return source, title
 
     async def _player_loop(self):
