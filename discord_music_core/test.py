@@ -31,6 +31,10 @@ class DummyVoiceClient:
 
     def is_playing(self):
         return self.is_playing_flag
+    
+    def is_paused(self):
+        print("ispaused called")
+        return False
 
 
 async def main():
